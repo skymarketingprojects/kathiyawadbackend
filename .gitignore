@@ -1,2 +1,7 @@
 *.json
 media/*
+__pycatche__/*
+__pycatche__/*
+*/__pycatche__/*
+*/__pycatche__
+*.sqlite3

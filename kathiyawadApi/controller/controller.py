@@ -7,6 +7,7 @@ from django.db.models import Q
 from kathiyawadApi.Utils.code import ResponseCode
 from kathiyawadApi.Utils.message import ResponseMessage
 from kathiyawadApi.Utils.status import ResponseStatus
+from django.http import HttpRequest
 class AppController:
     """Contains all the main business logic functions."""
     
@@ -32,7 +33,6 @@ class AppController:
             "price": product.price,
             "imageUrl": product.image.url,
             "metaDescription": product.metaDescription,
-            # QuillField content is returned as a string (HTML/Delta)
             "description": product.description.html, 
             "ingredients": product.ingredients.html,
             "shippingAndDelivery": product.shippingAndDelivery.html,
@@ -72,14 +72,14 @@ class AppController:
     def GetProducts(self, request):
         try:
             allProducts = Product.objects.all().order_by('-id')
-            paginatedResponse = paginateData(allProducts, request)
             
-            serializedData = self._SerializeProductList(paginatedResponse['data'])
+            serializedData = self._SerializeProductList(allProducts)
+            print(serializedData)
 
             return localResponse(
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data={"pagination": paginatedResponse, "products": serializedData},
+                data=serializedData,
                 message=ResponseMessage.PRODUCTS_FETCHED_SUCCESS
             )
         except Exception as e:
@@ -116,11 +116,11 @@ class AppController:
                 message=ResponseMessage.PRODUCT_FETCHED_ERROR
                 )
 
-    def SearchProducts(self, request):
+    def SearchProducts(self, request: HttpRequest):
         try:
             querys = request.GET.get('querys', '')
             filters = Q()
-
+            print(querys)
             if querys:
                 filterPairs = querys.split('|')
 
@@ -135,13 +135,12 @@ class AppController:
                             filters &= Q(dietryNeeds__value__in=values)
             
             filteredProducts = Product.objects.filter(filters).distinct().order_by('-id')
-            paginatedResponse = paginateData(filteredProducts, request)
-            serializedData = self._SerializeProductList(paginatedResponse['data'])
+            serializedData = self._SerializeProductList(filteredProducts)
             
             return localResponse(
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data={"pagination": paginatedResponse, "products": serializedData},
+                data=serializedData,
                 message=ResponseMessage.PRODUCTS_FETCHED_SUCCESS
             )
         except Exception as e:
@@ -157,13 +156,12 @@ class AppController:
     def GetBlogs(self, request):
         try:
             allBlogs = Blog.objects.all().order_by('-id')
-            paginatedResponse = paginateData(allBlogs, request)
-            serializedData = self._SerializeBlogList(paginatedResponse['data'])
+            serializedData = self._SerializeBlogList(allBlogs)
             
             return localResponse(
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data={"pagination": paginatedResponse, "blogs": serializedData},
+                data=serializedData,
                 message=ResponseMessage.BLOGS_FETCHED
             )
         except Exception as e:
@@ -179,13 +177,12 @@ class AppController:
             category = BlogCategory.objects.get(pk=categoryId)
             filteredBlogs = Blog.objects.filter(category=category).order_by('-id')
             
-            paginatedResponse = paginateData(filteredBlogs, request)
-            serializedData = self._SerializeBlogList(paginatedResponse['data'])
+            serializedData = self._SerializeBlogList(filteredBlogs)
             
             return localResponse(
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data={"pagination": paginatedResponse, "blogs": serializedData},
+                data=serializedData,
                 message=ResponseMessage.BLOGS_FETCHED.replace("{}", str(category.label))
             )
         except BlogCategory.DoesNotExist as e:
