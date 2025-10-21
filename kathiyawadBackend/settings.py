@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-*_2=f8t-x_j$bc2))4jb7l4^ffi@oi096$s&i#sqj-jlfvl(za
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
 
@@ -140,3 +140,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+"""
+admin :- kathiyawad
+password :- kathiyawadBackend@123
+"""

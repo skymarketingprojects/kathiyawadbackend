@@ -1,7 +1,8 @@
 from rest_framework.response import Response
 import dotsi
-def serverResponse(status='', message='', data={}, code=1):
+def serverResponse(response=False, status='', message='', data={}, code=1):
     obj = {
+        "response":response,
         'status': status,
         'code': code,
         'message': message,
@@ -9,8 +10,9 @@ def serverResponse(status='', message='', data={}, code=1):
     }
     return Response(obj)
 
-def localResponse(status='', message='', data={}, code=1):
+def localResponse(response=False,status='', message='', data={}, code=1):
     obj = {
+        "response":response,
         'status': status,
         'code': code,
         'message': message,

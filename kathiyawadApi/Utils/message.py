@@ -19,3 +19,8 @@ class ResponseMessage:
     BLOG_ERROR="Failed to fetch blog data."
 
     BLOG_FETCHED_ERROR="Failed to fetch blog data with ID {}."
+
+    HERO_IMAGES_FETCHED="Hero images fetched successfully."
+    HERO_IMAGES_FETCHED_ERROR="Failed to fetch hero images."
+
+    PAGE_NOT_FOUND="{} Page not found."

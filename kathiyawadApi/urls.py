@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     # Product List/Search: /products/ and /products/search?querys=...
     path('products/', views.productsListView, name='product-list-search'),
+    path('products/home/', views.productForHomeView, name='product-list-search'),
     
     # Product Detail: /products/<productId>/
     path('products/<int:productId>/', views.productDetailView, name='product-detail'),
@@ -17,4 +18,7 @@ urlpatterns = [
     
     # Blog Detail: /blog/<blogId>/
     path('blog/<int:blogId>/', views.blogDetailView, name='blog-detail'),
+    
+    # Hero Images: /hero-images/
+    path('stock/hero/', views.heroImagesView, name='hero-images'),
 ]

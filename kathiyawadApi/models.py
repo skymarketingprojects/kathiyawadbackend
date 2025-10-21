@@ -1,7 +1,7 @@
 # app/models.py
 from django.db import models
 from django_quill.fields import QuillField # Import QuillField
-
+from .Utils.modelhelper import indexShifting
 # --- Product Related Models ---
 
 class ProductCategory(models.Model):
@@ -63,3 +63,22 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+class Page(models.Model):
+    title = models.CharField(max_length=255)
+    def __str__(self):
+        return f"{self.title} page"
+
+class HeroImages(models.Model):
+    page = models.ForeignKey(Page, on_delete=models.CASCADE,related_name='HeroImages')
+    link = models.URLField()
+    image = models.ImageField(upload_to='heroimages/')
+    index = models.IntegerField()
+    def __str__(self):
+        return f"{self.page.title} page hero image"
+    
+    def save(self, *args, **kwargs):
+        indexShifting(self)
+        super().save(*args, **kwargs)
+    

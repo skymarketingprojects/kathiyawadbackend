@@ -8,6 +8,7 @@ from kathiyawadApi.Utils.code import ResponseCode
 from kathiyawadApi.Utils.message import ResponseMessage
 from kathiyawadApi.Utils.status import ResponseStatus
 from django.http import HttpRequest
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class AppController:
     """Contains all the main business logic functions."""
     
@@ -21,7 +22,7 @@ class AppController:
                 "title": product.title,
                 "price": product.price,
                 "imageUrl": product.image.url, 
-                "metaDescription": product.metaDescription,
+                "description": product.metaDescription,
             })
         return serializedData
 
@@ -69,33 +70,78 @@ class AppController:
 
     # --- Product Functions ---
 
-    def GetProducts(self, request):
+    def GetProducts(self, request:HttpRequest):
         try:
             allProducts = Product.objects.all().order_by('-id')
-            
-            serializedData = self._SerializeProductList(allProducts)
-            print(serializedData)
+
+            # --- Pagination ---
+            page = request.GET.get('page', 1)
+            pageSize = request.GET.get('pageSize', 6)
+
+            paginator = Paginator(allProducts, pageSize)
+
+            products_page = paginator.page(page)
+            print(f"products_page: {products_page.object_list}")
+
+            serializedData = self._SerializeProductList(products_page.object_list)
+            print(f"serializedData: {serializedData}")
 
             return localResponse(
+                response=True,
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data=serializedData,
+                data={
+                    "items": serializedData,
+                    
+                        "totalItems": paginator.count,
+                        "totalPages": paginator.num_pages,
+                        "currentPage": products_page.number,
+                        "hasNext": products_page.has_next(),
+                        "hasPrevious": products_page.has_previous(),
+                    
+                },
                 message=ResponseMessage.PRODUCTS_FETCHED_SUCCESS
             )
         except Exception as e:
             return localResponse(
+                response=False,
+                status=ResponseStatus.ERROR,
+                code=ResponseCode.ERROR,
+                data={"error": str(e)},
+                message=ResponseMessage.PRODUCTS_FETCHED_ERROR
+            )
+
+    def GetProductForHome(self):
+        try:
+            productCat = ProductCategory.objects.all()
+            productsData = []
+            productsList = []
+            for cat in productCat:
+                product = Product.objects.filter(category=cat).order_by('-id').first()
+                productsList.append(product)
+            productsData = self._SerializeProductList(productsList)
+            return localResponse(
+                response=True,
+                status=ResponseStatus.SUCCESS,
+                code=ResponseCode.SUCCESS,
+                data=productsData,
+                message=ResponseMessage.PRODUCTS_FETCHED_SUCCESS
+                )
+        except Exception as e:
+            return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.ERROR,
                 data={"error": str(e)},
                 message=ResponseMessage.PRODUCTS_FETCHED_ERROR
                 )
-
     def GetProductById(self, productId):
         try:
             product = Product.objects.get(pk=productId)
             fullProductData = self._SerializeProductDetail(product)
 
             return localResponse(
+                response=True,
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
                 data=fullProductData,
@@ -103,6 +149,7 @@ class AppController:
                 )
         except Product.DoesNotExist:
             return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.NOT_FOUND,
                 data={},
@@ -110,6 +157,7 @@ class AppController:
                 )
         except Exception as e:
             return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.ERROR,
                 data={"error": str(e)},
@@ -120,92 +168,146 @@ class AppController:
         try:
             querys = request.GET.get('querys', '')
             filters = Q()
-            print(querys)
             if querys:
                 filterPairs = querys.split('|')
-
                 for pair in filterPairs:
                     if ':' in pair:
                         filterType, valuesStr = pair.split(':', 1)
                         values = [v.strip() for v in valuesStr.split(',') if v.strip()]
-
                         if filterType == 'category':
                             filters &= Q(category__value__in=values)
                         elif filterType == 'dietryNeeds':
                             filters &= Q(dietryNeeds__value__in=values)
-            
+
             filteredProducts = Product.objects.filter(filters).distinct().order_by('-id')
-            serializedData = self._SerializeProductList(filteredProducts)
-            
+
+            # --- Pagination ---
+            page = request.GET.get('page', 1)
+            pageSize = request.GET.get('pageSize', 10)
+            paginator = Paginator(filteredProducts, pageSize)
+            products_page=[]
+            products_page = paginator.page(page)   
+
+            serializedData = self._SerializeProductList(products_page.object_list)
+
             return localResponse(
+                response=True,
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data=serializedData,
+                data={
+                    "items": serializedData,
+                    
+                        "totalItems": paginator.count,
+                        "totalPages": paginator.num_pages,
+                        "currentPage": products_page.number,
+                        "hasNext": products_page.has_next(),
+                        "hasPrevious": products_page.has_previous(),
+                    
+                },
                 message=ResponseMessage.PRODUCTS_FETCHED_SUCCESS
             )
         except Exception as e:
             return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.ERROR,
                 data={"error": str(e)},
                 message=ResponseMessage.PRODUCTS_FETCHED_ERROR
-                )
+            )
 
     # --- Blog Functions ---
 
     def GetBlogs(self, request):
         try:
             allBlogs = Blog.objects.all().order_by('-id')
-            serializedData = self._SerializeBlogList(allBlogs)
-            
+
+            page = request.GET.get('page', 1)
+            pageSize = request.GET.get('pageSize', 10)
+            paginator = Paginator(allBlogs, pageSize)
+            blogs_page = paginator.page(page)
+
+            serializedData = self._SerializeBlogList(blogs_page.object_list)
+
             return localResponse(
+                response=True,
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data=serializedData,
+                data={
+                    "items": serializedData,
+                    
+                        "totalItems": paginator.count,
+                        "totalPages": paginator.num_pages,
+                        "currentPage": blogs_page.number,
+                        "hasNext": blogs_page.has_next(),
+                        "hasPrevious": blogs_page.has_previous(),
+                    
+                },
                 message=ResponseMessage.BLOGS_FETCHED
             )
         except Exception as e:
             return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.ERROR,
                 data={"error": str(e)},
                 message=ResponseMessage.BLOGS_FETCHED_ERROR
-                )
+            )
+
 
     def FilterBlogsByCategory(self, categoryId, request):
         try:
             category = BlogCategory.objects.get(pk=categoryId)
             filteredBlogs = Blog.objects.filter(category=category).order_by('-id')
             
-            serializedData = self._SerializeBlogList(filteredBlogs)
+            # --- Pagination ---
+            page = request.GET.get('page', 1)
+            pageSize = request.GET.get('pageSize', 10)
+
+            paginator = Paginator(filteredBlogs, pageSize)
+            blogs_page = paginator.page(page)
             
+
+            serializedData = self._SerializeBlogList(blogs_page.object_list)
+
             return localResponse(
+                response=True,
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
-                data=serializedData,
+                data={
+                    "items": serializedData,
+                    
+                        "totalItems": paginator.count,
+                        "totalPages": paginator.num_pages,
+                        "currentPage": blogs_page.number,
+                        "hasNext": blogs_page.has_next(),
+                        "hasPrevious": blogs_page.has_previous(),
+                    
+                },
                 message=ResponseMessage.BLOGS_FETCHED.replace("{}", str(category.label))
             )
         except BlogCategory.DoesNotExist as e:
-             return localResponse(
-                 status=ResponseStatus.ERROR,
-                 code=ResponseCode.NOT_FOUND,
-                 data={"error": str(e)},
-                 message=ResponseMessage.BLOG_CATEGORY_NOT_FOUND.replace("{}", str(categoryId))
-                 )
+            return localResponse(
+                response=False,
+                status=ResponseStatus.ERROR,
+                code=ResponseCode.NOT_FOUND,
+                data={"error": str(e)},
+                message=ResponseMessage.BLOG_CATEGORY_NOT_FOUND.replace("{}", str(categoryId))
+            )
         except Exception as e:
             return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.ERROR,
                 data={"error": str(e)},
                 message=ResponseMessage.BLOGS_FETCHED_ERROR
-                )
-
+            )
     def GetBlogById(self, blogId):
         try:
             blog = Blog.objects.get(pk=blogId)
             fullBlogData = self._SerializeBlogDetail(blog)
             
             return localResponse(
+                response=True,
                 status=ResponseStatus.SUCCESS,
                 code=ResponseCode.SUCCESS,
                 data=fullBlogData,
@@ -213,6 +315,7 @@ class AppController:
                 )
         except Blog.DoesNotExist:
             return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.NOT_FOUND,
                 data={},
@@ -220,6 +323,7 @@ class AppController:
                 )
         except Exception as e:
             return localResponse(
+                response=False,
                 status=ResponseStatus.ERROR,
                 code=ResponseCode.ERROR,
                 data={"error": str(e)},
