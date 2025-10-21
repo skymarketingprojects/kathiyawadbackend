@@ -19,7 +19,7 @@ urlpatterns = [
     path('blogs/search/<int:categoryId>/', views.blogsSearchByCategoryView, name='blog-search-category'),
     
     # Blog Detail: /blog/<blogId>/
-    path('blog/<int:blogId>/', views.blogDetailView, name='blog-detail'),
+    path('blogs/<int:blogId>/', views.blogDetailView, name='blog-detail'),
     
     # Hero Images: /hero-images/
     path('stock/hero/', views.heroImagesView, name='hero-images'),

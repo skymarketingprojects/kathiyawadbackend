@@ -145,12 +145,12 @@ SITE_ID = 1
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'http://31.97.235.91/var/www/kathiyawad/static/'
+STATIC_URL = f"{env('BASE_URL')}/static/"
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = '/var/www/kathiyawad/static/'
 # STATIC_ROOT = 'static_root'
 
-MEDIA_URL = 'http://31.97.235.91/var/www/kathiyawad/media/'
+MEDIA_URL = f"{env('BASE_URL')}/media/"
 MEDIA_ROOT = 'media'
 
 # Default primary key field type
