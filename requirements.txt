@@ -37,8 +37,9 @@ packaging==24.0
 pathspec==0.10.1
 phonenumbers==8.13.46
 pillow
-psycopg2==2.9.9
-psycopg2-binary==2.9.9
+psycopg[binary]
+#psycopg2==2.9.9
+#psycopg2-binary==2.9.9
 PyJWT==2.8.0
 pypiwin32==223; platform_system == "Windows"
 python-dateutil==2.9.0.post0
